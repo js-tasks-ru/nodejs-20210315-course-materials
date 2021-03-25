@@ -1,0 +1,7 @@
+include:
+  - src/**/*.js
+reporter:
+  - text
+  - html
+report-dir: ./reports/coverage
+temp-dir: ./reports/.nyc_output
