@@ -1,0 +1,10 @@
+POST http://localhost:3000/api/books
+#Content-Type: application/json
+#Content-Type: application/x-www-form-urlencoded
+#Content-Type: multipart/form-data <- koa-multer
+
+{
+  "id": 30,
+  "title": "title",
+  "author": "author"
+}
