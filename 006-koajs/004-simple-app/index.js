@@ -44,3 +44,9 @@ bootstrap(app);
 app.listen(3000, () => {
   console.log('Server started');
 });
+
+// process.on('uncaughtException', (error, origin) => {
+// });
+//
+// process.on('unhandledRejection', error => {
+// });

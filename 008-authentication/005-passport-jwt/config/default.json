@@ -1,0 +1,27 @@
+{
+  "app": {
+    "port": "3000"
+  },
+  "mongodb": {
+    "url": "mongodb://localhost:27017/auth_jwt"
+  },
+  "auth": {
+    "salt": "salt",
+    "userSaltLength": 20,
+    "iterations": 1,
+    "hashLength": 64,
+    "hashAlgorithm": "sha512",
+    "github": {
+      "clientId": "",
+      "secret": ""
+    },
+    "jwt": {
+      "algorithm": "HS256",
+      "secret": "secret",
+      "expiresIn": "30s"
+    },
+    "refreshToken": {
+      "expiresIn": "3m"
+    }
+  }
+}
