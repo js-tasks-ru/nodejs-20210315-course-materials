@@ -1,0 +1,7 @@
+app:
+  port: 3000
+db:
+  mongo:
+    url: mongodb://localhost:27017/incident_management_system
+graphql:
+  playground: true

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WebSocket Chat</title>
+</head>
+<style>
+
+    html, body {
+        height: 100%;
+    }
+
+    body, button, input {
+        font-size: 30px;
+    }
+
+    .container {
+        margin-left: 10%;
+        margin-right: 10%;
+        display: flex;
+        justify-content: center;
+        align-content: stretch;
+        flex-direction: column;
+    }
+
+    .name-container {
+        flex: 2;
+        display: flex;
+        flex-direction: row;
+        border: 1px solid gray;
+        padding: 2px;
+        margin-left: 5px;
+    }
+
+    .name {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .name input {
+        flex: 2;
+        margin: 0 5px;
+        border: none;
+    }
+
+    .name input:focus {
+        outline: none;
+    }
+
+    .name button {
+        border: 1px solid blue;
+        background: blue;
+        color: white;
+    }
+
+    .chat {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .messages {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        height: 500px;
+        overflow-y: scroll;
+    }
+
+    #send-form {
+        display: flex;
+        flex-direction: row;
+        border: 1px solid gray;
+        padding: 2px;
+    }
+
+    #send-form input {
+        flex-grow: 2;
+        border: none;
+    }
+
+    #send-form input:focus {
+        outline: none;
+    }
+
+    button {
+        border: 1px solid blue;
+        background: blue;
+        color: white;
+    }
+
+</style>
+<body>
+<div class="container">
+    <div class="name">
+        <label for="name">Input your name: </label>
+        <form class="name-container" id="connect-form">
+            <input type="text" id="name">
+            <button type="submit" id="connect">Connect</button>
+        </form>
+    </div>
+    <div class="chat">
+        <div class="messages" id="messages">
+        </div>
+        <form id="send-form">
+            <input type="text" id="message">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+</div>
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  class Chat {
+    constructor({onopen, onmessage}) {
+      this.ws = null;
+      this.name = null;
+      this.handlers = {
+        open: onopen,
+        message: onmessage
+      }
+    }
+
+    connect(name) {
+      this.ws = io('ws://localhost:3000');
+      this.name = name;
+      const open = (...args) => {
+        this.ws.emit('start', {name});
+        this.handlers.open(...args);
+        this.ws.off('connect', open);
+      };
+      this.ws.on('connect', open);
+
+      this.ws.on('message', ({from, message}) => {
+        this.handlers.message(from, message)
+      });
+    }
+
+    send(message) {
+      this.ws.emit('message', {message, from: this.name});
+      this.handlers.message(this.name, message);
+    }
+  }
+
+  const nameInput = document.querySelector('#name');
+  const connectForm = document.querySelector('#connect-form');
+
+  const messageInput = document.querySelector('#message');
+  const sendForm = document.querySelector('#send-form');
+
+  const messagesOutput = document.querySelector("#messages");
+
+  function renderMessage(from, message) {
+    const p = document.createElement("p");
+    const date = new Date();
+    p.innerText = `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}] ${from}: ${message}`;
+    messagesOutput.appendChild(p);
+    messagesOutput.scrollTop = messagesOutput.scrollHeight;
+  }
+
+
+  const chat = new Chat({
+    onopen: () => {
+      renderMessage('system', 'connected');
+    },
+    onmessage: (from, message) => {
+      renderMessage(from, message);
+    }
+  });
+
+  connectForm.addEventListener('submit', event => {
+    event.preventDefault();
+    chat.connect(nameInput.value);
+  });
+
+  sendForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const message = messageInput.value;
+    messageInput.value = '';
+    if (message !== '') {
+      chat.send(message)
+    }
+  });
+</script>
+</html>
+
+
+

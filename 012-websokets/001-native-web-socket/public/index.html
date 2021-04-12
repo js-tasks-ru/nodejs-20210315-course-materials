@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WebSocket Chat</title>
+</head>
+<style>
+
+    html, body {
+        height: 100%;
+    }
+
+    body, button, input {
+        font-size: 30px;
+    }
+
+    .container {
+        margin-left: 10%;
+        margin-right: 10%;
+        display: flex;
+        justify-content: center;
+        align-content: stretch;
+        flex-direction: column;
+    }
+
+    .name-container {
+        flex: 2;
+        display: flex;
+        flex-direction: row;
+        border: 1px solid gray;
+        padding: 2px;
+        margin-left: 5px;
+    }
+
+    .name {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .name input {
+        flex: 2;
+        margin: 0 5px;
+        border: none;
+    }
+
+    .name input:focus {
+        outline: none;
+    }
+
+    .name button {
+        border: 1px solid blue;
+        background: blue;
+        color: white;
+    }
+
+    .chat {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .messages {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        height: 500px;
+        overflow-y: scroll;
+    }
+
+    #send-form {
+        display: flex;
+        flex-direction: row;
+        border: 1px solid gray;
+        padding: 2px;
+    }
+
+    #send-form input {
+        flex-grow: 2;
+        border: none;
+    }
+
+    #send-form input:focus {
+        outline: none;
+    }
+
+    button {
+        border: 1px solid blue;
+        background: blue;
+        color: white;
+    }
+
+</style>
+<body>
+<div class="container">
+    <div class="name">
+        <label for="name">Input your name: </label>
+        <form class="name-container" id="connect-form">
+            <input type="text" id="name">
+            <button type="submit" id="connect">Connect</button>
+        </form>
+    </div>
+    <div class="chat">
+        <div class="messages" id="messages">
+        </div>
+        <form id="send-form">
+            <input type="text" id="message">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+</div>
+</body>
+<script>
+  class Chat {
+    constructor({onopen, onmessage}) {
+      this.ws = null;
+      this.name = null;
+      this.handlers = {
+        open: onopen,
+        message: onmessage
+      }
+    }
+
+    connect(name) {
+      this.ws = new WebSocket('ws://localhost:3000/ws');
+      this.name = name;
+      const open = (...args) => {
+        this.ws.send(JSON.stringify({'type': 'start', name}));
+
+        this.handlers.open(...args);
+
+        this.ws.removeEventListener('open', open);
+      };
+      this.ws.addEventListener('open', open);
+
+      const message = msg => {
+        const message = JSON.parse(msg.data);
+        if (message.type === 'message') {
+          this.handlers.message(message.from, message.message)
+        }
+      };
+      this.ws.addEventListener('message', message)
+    }
+
+    send(message) {
+      this.ws.send(JSON.stringify({type: 'message', message, name: this.name}));
+      this.handlers.message(this.name, message);
+    }
+  }
+
+  const nameInput = document.querySelector('#name');
+  const connectForm = document.querySelector('#connect-form');
+
+  const messageInput = document.querySelector('#message');
+  const sendForm = document.querySelector('#send-form');
+
+  const messagesOutput = document.querySelector("#messages");
+
+  function renderMessage(from, message) {
+    const p = document.createElement("p");
+    const date = new Date();
+    p.innerText = `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}] ${from}: ${message}`;
+    messagesOutput.appendChild(p);
+    messagesOutput.scrollTop = messagesOutput.scrollHeight;
+  }
+
+
+  const chat = new Chat({
+    onopen: () => {
+      renderMessage('system', 'connected');
+    },
+    onmessage: (from, message) => {
+      renderMessage(from, message);
+    }
+  });
+
+  connectForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    chat.connect(nameInput.value);
+  });
+
+  sendForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const message = messageInput.value;
+    messageInput.value = '';
+    if (message !== '') {
+      chat.send(message)
+    }
+  });
+</script>
+</html>
