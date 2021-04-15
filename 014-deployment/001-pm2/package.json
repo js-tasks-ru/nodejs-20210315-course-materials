@@ -1,0 +1,20 @@
+{
+  "name": "001-pm2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "nginx": "npm run nginx:stop && npm run nginx:start",
+    "nginx:start": "docker run -d --rm -v \"${PWD}/nginx/nginx.conf:/etc/nginx/nginx.conf\" --name nginx-proxy-pass --net host nginx:1.17-alpine",
+    "nginx:stop": "docker stop nginx-proxy-pass || exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@koa/router": "^10.0.0",
+    "koa": "^2.13.0",
+    "koa-morgan": "^1.0.1"
+  }
+}
